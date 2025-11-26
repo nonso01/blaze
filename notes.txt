@@ -1,0 +1,51 @@
+MVC(Model-View-Controller) + a Touch of State Machine (pattern of interest)
+
+Workflow to Bring It to Fruition
+To actually build this (since patterns are useless without a plan), use an iterative workflow like a solo "Agile-lite":
+
+- Plan (1-2 hours): Sketch wireframes (Spotify layout: left sidebar, center content, bottom player). List features: MVP = scan library, display tracks with art, play/pause/next, notifications. Prioritize: Audio first, then UI.
+- Prototype (Day 1): Set up basic eframe window with egui dark theme. Add rodio to play one hardcoded file. (We'll code this next if you say "go".)
+- Implement Features One by One (1-2 days each):
+- Scan library (walkdir + poll-promise for non-blocking).
+- Extract metadata/art (lofty + image).
+- Build UI (egui grids/tables for playlists).
+- Add controls (zbus for media keys).
+- Test on Linux (e.g., PipeWire audio).
+___________________________________________________________________________________________
+Project structure
+
+blaze/
+├─ Cargo.toml
+├─ src/
+│  ├─ main.rs                ← tiny bootstrap (just launches the app)
+│  ├─ app.rs                 ← the big one: holds MyApp state + egui update() loop
+│  ├─ lib.rs                 ← (optional) if you ever split into library
+│  │
+│  ├─ audio/                 ← everything related to sound
+│  │   ├─ mod.rs             ← pub use all the files below
+│  │   ├─ player.rs          ← rodio Sink, playback queue, play/pause/seek
+│  │   ├─ decoder.rs         ← symphonia decoder wrapper (re-usable)
+│  │   └─ output.rs          ← chooses audio device (cpal/rodio stream)
+│  │
+│  ├─ library/               ← music collection logic
+│  │   ├─ mod.rs
+│  │   ├─ scanner.rs         ← walkdir + poll-promise background scanning
+│  │   ├─ track.rs           ← struct Track + metadata extraction with lofty
+│  │   └─ library.rs         ← Vec<Track>, caching, search, etc.
+│  │
+│  ├─ ui/                    ← all egui visual code (pure view)
+│  │   ├─ mod.rs
+│  │   ├─ sidebar.rs         ← left sidebar (Library, Playlists, etc.)
+│  │   ├─ main_view.rs       ← center content (album grid, track list)
+│  │   ├─ player_bar.rs      ← bottom now-playing bar + controls
+│  │   ├─ album_art.rs       ← loads & caches album art textures
+│  │   └─ components.rs      ← reusable widgets (buttons, sliders, etc.)
+│  │
+│  ├─ utils/                 ← tiny helpers used everywhere
+│  │   ├─ mod.rs
+│  │   ├─ format_duration.rs
+│  │   ├─ notifications.rs  ← wrapper around notify-rust
+│  │   └─ icons.rs           ← SVG → egui texture helpers (later)
+│  │
+│  └─ state.rs               ← shared app state (current track, volume, shuffle, etc.)
+└─ assets/                    ← optional: icons, default album art, etc.
